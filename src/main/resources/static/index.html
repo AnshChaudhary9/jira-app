@@ -315,7 +315,7 @@
         const password = document.getElementById("adminPassword").value;
         const type = document.getElementById("adminType").value.toLowerCase();
 
-        const res = await fetch(`${API}/user/new-${type}`, {
+        const res = await fetch(`${API}/user/${type}`, {
             method: "POST",
             headers: getHeaders(),
             body: JSON.stringify({ fullName: name, password })

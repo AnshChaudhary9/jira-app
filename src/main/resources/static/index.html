@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jira Project Demo</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 30px; }
+        .container { max-width: 700px; margin: 0 auto; }
+        .card { background: #fff; border-radius: 8px; padding: 25px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        h1 { text-align: center; margin-bottom: 25px; color: #333; font-size: 24px; }
+        h2 { margin-bottom: 12px; color: #444; font-size: 16px; }
+        label { display: block; margin-bottom: 4px; font-weight: 600; color: #555; font-size: 13px; }
+        input, select { width: 100%; padding: 9px; margin-bottom: 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
+        button { padding: 10px 20px; background: #2563eb; color: #fff; border: none; border-radius: 4px; font-size: 14px; cursor: pointer; margin-right: 8px; margin-bottom: 8px; }
+        button:hover { background: #1d4ed8; }
+        button.danger { background: #dc2626; }
+        button.danger:hover { background: #b91c1c; }
+        button.success { background: #16a34a; }
+        button.success:hover { background: #15803d; }
+        button.warn { background: #f59e0b; }
+        button.warn:hover { background: #d97706; }
+        .hidden { display: none; }
+        .token-bar { background: #1e293b; color: #94a3b8; padding: 10px; border-radius: 4px; font-size: 11px; word-break: break-all; margin-bottom: 15px; }
+        .result { margin-top: 10px; padding: 10px; border-radius: 4px; font-size: 13px; }
+        .success-msg { background: #d1fae5; color: #065f46; }
+        .error-msg { background: #fee2e2; color: #991b1b; }
+        .table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+        .table th, .table td { padding: 8px; border: 1px solid #e5e7eb; text-align: left; }
+        .table th { background: #f9fafb; font-weight: 600; }
+        .badge { padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+        .badge-ADMIN { background: #fee2e2; color: #991b1b; }
+        .badge-MANAGER { background: #fef3c7; color: #92400e; }
+        .badge-TESTER { background: #ede9fe; color: #5b21b6; }
+        .badge-DEVELOPER { background: #d1fae5; color: #065f46; }
+        .badge-USER { background: #dbeafe; color: #1e40af; }
+        .badge-BUG { background: #fee2e2; color: #991b1b; }
+        .badge-STORY { background: #d1fae5; color: #065f46; }
+        .badge-TASK { background: #fef3c7; color: #92400e; }
+        .role-tag { display: inline-block; padding: 3px 10px; background: #e0e7ff; color: #3730a3; border-radius: 12px; font-size: 12px; font-weight: 600; margin-left: 10px; }
+        .entry-item { padding: 10px; border-bottom: 1px solid #eee; font-size: 13px; }
+        .entry-item strong { color: #333; }
+        .entry-item span { color: #666; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Jira Project Demo</h1>
+
+    <!-- LOGIN -->
+    <div class="card" id="loginCard">
+        <h2>Login</h2>
+        <label>Full Name</label>
+        <input type="text" id="loginName" placeholder="Enter your name">
+        <label>Password</label>
+        <input type="password" id="loginPassword" placeholder="Enter password">
+        <button class="success" onclick="login()">Login</button>
+        <div id="loginResult"></div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="card hidden" id="dashboard">
+        <h2>Dashboard <span class="role-tag" id="roleTag"></span></h2>
+        <p id="welcomeMsg" style="margin-bottom:10px; font-size:14px;"></p>
+        <div class="token-bar" id="tokenDisplay"></div>
+
+        <!-- ========== ADMIN ONLY ========== -->
+
+        <!-- Admin: Create Users -->
+        <div class="hidden" id="adminCreateSection">
+            <h2>Create User</h2>
+            <label>Name</label>
+            <input type="text" id="adminName" placeholder="Full name">
+            <label>Password</label>
+            <input type="password" id="adminPassword" placeholder="Password">
+            <label>Type</label>
+            <select id="adminType">
+                <option value="new-admin">ADMIN</option>
+                <option value="new-manager">MANAGER</option>
+                <option value="new-user/dev">DEVELOPER</option>
+                <option value="new-user/tester">TESTER</option>
+            </select>
+            <button onclick="adminCreateUser()">Create User</button>
+            <div id="adminCreateResult"></div>
+        </div>
+
+        <!-- Admin: Update User -->
+        <div class="hidden" id="updateUserSection">
+            <h2>Update User</h2>
+            <label>User ID</label>
+            <input type="text" id="updateUserId" placeholder="ObjectId">
+            <label>New Name</label>
+            <input type="text" id="updateUserName" placeholder="New name">
+            <label>New Password</label>
+            <input type="password" id="updateUserPassword" placeholder="New password">
+            <button onclick="updateUser()">Update</button>
+            <div id="updateUserResult"></div>
+        </div>
+
+        <!-- Admin: Delete User -->
+        <div class="hidden" id="deleteUserSection">
+            <h2>Delete User</h2>
+            <label>User ID</label>
+            <input type="text" id="deleteUserId" placeholder="ObjectId">
+            <button class="danger" onclick="deleteUser()">Delete</button>
+            <div id="deleteUserResult"></div>
+        </div>
+
+        <!-- ========== ADMIN + MANAGER ========== -->
+
+        <!-- View All Users -->
+        <div class="hidden" id="allUsersSection">
+            <h2>All Users</h2>
+            <button onclick="fetchAllUsers()">Fetch Users</button>
+            <div id="usersResult"></div>
+            <table class="table hidden" id="usersTable">
+                <thead>
+                <tr><th>Name</th><th>Role</th><th>ID</th><th>Entries</th></tr>
+                </thead>
+                <tbody id="usersBody"></tbody>
+            </table>
+        </div>
+
+        <!-- View All Entries (MANAGER) -->
+        <div class="hidden" id="allEntriesSection">
+            <h2>All Entries</h2>
+            <button onclick="fetchAllEntries()">All</button>
+            <button class="success" onclick="fetchAllBugs()">Bugs</button>
+            <button class="success" onclick="fetchAllStories()">Stories</button>
+            <div id="allEntriesResult"></div>
+            <div id="allEntriesList"></div>
+        </div>
+
+        <!-- View Entries by User (MANAGER) -->
+        <div class="hidden" id="entriesByUserSection">
+            <h2>Entries by User</h2>
+            <label>User ID</label>
+            <input type="text" id="entriesByUserId" placeholder="ObjectId">
+            <button onclick="fetchEntriesByUser()">Fetch</button>
+            <div id="entriesByUserResult"></div>
+            <div id="entriesByUserList"></div>
+        </div>
+
+        <!-- ========== TESTER ONLY ========== -->
+
+        <!-- Create Bug -->
+        <div class="hidden" id="createBugSection">
+            <h2>Report Bug</h2>
+            <label>Title</label>
+            <input type="text" id="bugTitle" placeholder="Bug title">
+            <label>Description</label>
+            <input type="text" id="bugDesc" placeholder="Bug description">
+            <button class="success" onclick="createBug()">Submit Bug</button>
+            <div id="bugResult"></div>
+        </div>
+
+        <!-- ========== DEVELOPER ONLY ========== -->
+
+        <!-- Create Story -->
+        <div class="hidden" id="createStorySection">
+            <h2>Create Story</h2>
+            <label>Title</label>
+            <input type="text" id="storyTitle" placeholder="Story title">
+            <label>Description</label>
+            <input type="text" id="storyDesc" placeholder="Story description">
+            <button class="success" onclick="createStory()">Submit Story</button>
+            <div id="storyResult"></div>
+        </div>
+
+        <!-- ========== ALL AUTHENTICATED USERS ========== -->
+
+        <!-- My Entries -->
+        <div class="hidden" id="myEntriesSection">
+            <h2>My Entries</h2>
+            <button onclick="fetchMyEntries()">Fetch My Entries</button>
+            <div id="myEntriesResult"></div>
+            <div id="myEntriesList"></div>
+        </div>
+
+        <!-- Update My Entry -->
+        <div id="updateEntrySection">
+            <h2>Update Entry</h2>
+            <label>Entry ID</label>
+            <input type="text" id="updateEntryId" placeholder="Entry ObjectId">
+            <label>New Title</label>
+            <input type="text" id="updateEntryTitle" placeholder="New title">
+            <label>New Description</label>
+            <input type="text" id="updateEntryDesc" placeholder="New description">
+            <button onclick="updateEntry()">Update</button>
+            <div id="updateEntryResult"></div>
+        </div>
+
+        <!-- Delete My Entry -->
+        <div id="deleteEntrySection">
+            <h2>Delete Entry</h2>
+            <label>Entry ID</label>
+            <input type="text" id="deleteEntryId" placeholder="Entry ObjectId">
+            <button class="danger" onclick="deleteEntry()">Delete</button>
+            <div id="deleteEntryResult"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API = "http://localhost:8080";
+    let token = null;
+    let currentRole = null;
+
+    function showResult(id, msg, isError) {
+        document.getElementById(id).innerHTML =
+            `<div class="result ${isError ? 'error-msg' : 'success-msg'}">${msg}</div>`;
+    }
+
+    function getHeaders() {
+        return {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+        };
+    }
+
+    function renderEntries(containerId, entries) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = "";
+
+    if (!entries || entries.length === 0) {
+        container.innerHTML = "<p style='color:#999;'>No entries found.</p>";
+        return;
+    }
+
+    entries.forEach(e => {
+        const date = e.date ? new Date(e.date).toLocaleString() : "N/A";  // ← THIS LINE WAS MISSING
+        container.innerHTML += `
+            <div class="entry-item">
+                <strong>${e.title}</strong>
+                <span class="badge badge-${e.type}">${e.type}</span>
+                <br><span>${e.description || ""}</span>
+                <br><span style="font-size:12px;color:#666;">
+                    Assigned to: <strong>${e.assignedTo || "Unassigned"}</strong>
+                    &nbsp;|&nbsp; Date: ${date}
+                </span>
+                <br><span style="font-size:11px;color:#999;">ID: ${e.entryId || e.id}</span>
+            </div>`;
+        });
+    }
+
+    // ==================== LOGIN ====================
+    async function login() {
+        const name = document.getElementById("loginName").value;
+        const password = document.getElementById("loginPassword").value;
+
+        const res = await fetch(`${API}/public/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ fullName: name, password })
+        });
+
+        if (res.ok) {
+            token = await res.text();
+            const payload = JSON.parse(atob(token.split(".")[1]));
+            currentRole = payload.role || "USER";
+
+            document.getElementById("dashboard").classList.remove("hidden");
+            document.getElementById("welcomeMsg").textContent = `Welcome, ${name}!`;
+<!--            document.getElementById("tokenDisplay").textContent = token;-->
+            document.getElementById("roleTag").textContent = currentRole;
+
+            showSectionsByRole(currentRole);
+            showResult("loginResult", " Login successful!", false);
+        } else {
+            showResult("loginResult", " Invalid credentials", true);
+        }
+    }
+
+    // ==================== ROLE-BASED VISIBILITY ====================
+    function showSectionsByRole(role) {
+        // Hide all
+        ["adminCreateSection","updateUserSection","deleteUserSection",
+         "allUsersSection","allEntriesSection","entriesByUserSection",
+         "createBugSection","createStorySection"].forEach(id =>
+            document.getElementById(id).classList.add("hidden")
+        );
+
+        if (role === "ADMIN") {
+            document.getElementById("adminCreateSection").classList.remove("hidden");
+            document.getElementById("updateUserSection").classList.remove("hidden");
+            document.getElementById("deleteUserSection").classList.remove("hidden");
+            document.getElementById("allUsersSection").classList.remove("hidden");
+            document.getElementById("allEntriesSection").classList.remove("hidden");
+            document.getElementById("entriesByUserSection").classList.remove("hidden");
+        } else if (role === "MANAGER") {
+            document.getElementById("allUsersSection").classList.remove("hidden");
+            document.getElementById("allEntriesSection").classList.remove("hidden");
+            document.getElementById("entriesByUserSection").classList.remove("hidden");
+            document.getElementById("createBugSection").classList.remove("hidden");
+            document.getElementById("createStorySection").classList.remove("hidden");
+
+        } else if (role === "TESTER") {
+            document.getElementById("createBugSection").classList.remove("hidden");
+            document.getElementById("entriesByUserSection").classList.remove("hidden");
+            document.getElementById("myEntriesSection").classList.remove("hidden");
+
+        } else if (role === "DEVELOPER") {
+            document.getElementById("createStorySection").classList.remove("hidden");
+            document.getElementById("entriesByUserSection").classList.remove("hidden");
+            document.getElementById("myEntriesSection").classList.remove("hidden");
+
+        }
+        // USER → only "My Entries" section (always visible)
+    }
+
+    // ==================== ADMIN: USER MANAGEMENT ====================
+    async function adminCreateUser() {
+        const name = document.getElementById("adminName").value;
+        const password = document.getElementById("adminPassword").value;
+        const type = document.getElementById("adminType").value.toLowerCase();
+
+        const res = await fetch(`${API}/user/new-${type}`, {
+            method: "POST",
+            headers: getHeaders(),
+            body: JSON.stringify({ fullName: name, password })
+        });
+
+        if (res.ok) showResult("adminCreateResult", " User created!", false);
+        else showResult("adminCreateResult", ` ${res.status}`, true);
+    }
+
+    async function updateUser() {
+        const id = document.getElementById("updateUserId").value;
+        const name = document.getElementById("updateUserName").value;
+        const password = document.getElementById("updateUserPassword").value;
+
+        const res = await fetch(`${API}/user/update-user/id/${id}`, {
+            method: "PUT",
+            headers: getHeaders(),
+            body: JSON.stringify({ fullName: name, password })
+        });
+
+        if (res.ok) showResult("updateUserResult", " User updated!", false);
+        else showResult("updateUserResult", ` ${res.status}`, true);
+    }
+
+    async function deleteUser() {
+        const id = document.getElementById("deleteUserId").value;
+
+        const res = await fetch(`${API}/user/delete-user/id/${id}`, {
+            method: "DELETE",
+            headers: getHeaders()
+        });
+
+        if (res.ok) showResult("deleteUserResult", " User deleted!", false);
+        else showResult("deleteUserResult", ` ${res.status}`, true);
+    }
+
+    // ==================== ADMIN + MANAGER: VIEW USERS ====================
+    async function fetchAllUsers() {
+        const res = await fetch(`${API}/user/all-users`, { headers: getHeaders() });
+
+        if (res.ok) {
+            const users = await res.json();
+            const tbody = document.getElementById("usersBody");
+            tbody.innerHTML = "";
+            document.getElementById("usersTable").classList.remove("hidden");
+
+            users.forEach(u => {
+                const role = u.role;
+                tbody.innerHTML += `<tr>
+                    <td>${u.fullName}</td>
+                    <td><span class="badge badge-${role}">${role}</span></td>
+                    <td style="font-size:11px;">${u.id}</td>
+                    <td>${u.entryList && u.entryList.length > 0
+                            ? u.entryList.map(e => `${e.title} <span style="color:#999;font-size:10px;">(${e.entryId})</span>`).join('<br>')
+                            : 'None'}
+                    </td>
+                </tr>`;
+            });
+        } else {
+            showResult("usersResult", ` ${res.status} - No permission`, true);
+        }
+    }
+
+    function fillUpdateUser(id, name) {
+        document.getElementById("updateUserId").value = id;
+        document.getElementById("updateUserName").value = name;
+        document.getElementById("updateUserSection").scrollIntoView({ behavior: "smooth" });
+    }
+
+    function fillDeleteUser(id) {
+        document.getElementById("deleteUserId").value = id;
+        document.getElementById("deleteUserSection").scrollIntoView({ behavior: "smooth" });
+    }
+
+    // ==================== MANAGER: VIEW ENTRIES ====================
+    async function fetchAllEntries() {
+        const res = await fetch(`${API}/entry`, { headers: getHeaders() });
+        if (res.ok) {
+            const entries = await res.json();
+            renderEntries("allEntriesList", entries);
+            showResult("allEntriesResult", ` ${entries.length} entries found`, false);
+        } else {
+            showResult("allEntriesResult", ` ${res.status}`, true);
+        }
+    }
+
+    async function fetchAllBugs() {
+        const res = await fetch(`${API}/entry/bug`, { headers: getHeaders() });
+        if (res.ok) {
+            const entries = await res.json();
+            renderEntries("allEntriesList", entries);
+            showResult("allEntriesResult", ` ${entries.length} bugs found`, false);
+        } else {
+            showResult("allEntriesResult", ` ${res.status}`, true);
+        }
+    }
+
+    async function fetchAllStories() {
+        const res = await fetch(`${API}/entry/story`, { headers: getHeaders() });
+        if (res.ok) {
+            const entries = await res.json();
+            renderEntries("allEntriesList", entries);
+            showResult("allEntriesResult", ` ${entries.length} stories found`, false);
+        } else {
+            showResult("allEntriesResult", ` ${res.status}`, true);
+        }
+    }
+
+    async function fetchEntriesByUser() {
+        const userId = document.getElementById("entriesByUserId").value;
+        const res = await fetch(`${API}/entry/user-entry/id/${userId}`, { headers: getHeaders() });
+        if (res.ok) {
+            const entries = await res.json();
+            renderEntries("entriesByUserList", entries);
+            showResult("entriesByUserResult", ` ${entries.length} entries`, false);
+        } else {
+            showResult("entriesByUserResult", ` ${res.status}`, true);
+        }
+    }
+
+    // ==================== TESTER: CREATE BUG ====================
+    async function createBug() {
+        const title = document.getElementById("bugTitle").value;
+        const description = document.getElementById("bugDesc").value;
+
+        const res = await fetch(`${API}/entry/bug`, {
+            method: "POST",
+            headers: getHeaders(),
+            body: JSON.stringify({ title, description })
+        });
+
+        if (res.ok) showResult("bugResult", " Bug reported!", false);
+        else showResult("bugResult", ` ${res.status}`, true);
+    }
+
+    // ==================== DEVELOPER: CREATE STORY ====================
+    async function createStory() {
+        const title = document.getElementById("storyTitle").value;
+        const description = document.getElementById("storyDesc").value;
+
+        const res = await fetch(`${API}/entry/story`, {
+            method: "POST",
+            headers: getHeaders(),
+            body: JSON.stringify({ title, description })
+        });
+
+        if (res.ok) showResult("storyResult", "Story created!", false);
+        else showResult("storyResult", ` ${res.status}`, true);
+    }
+
+    // ==================== ALL: MY ENTRIES ====================
+    async function fetchMyEntries() {
+        const res = await fetch(`${API}/entry/user-entry`, { headers: getHeaders() });
+        if (res.ok) {
+            const entries = await res.json();
+            renderEntries("myEntriesList", entries);
+            showResult("myEntriesResult", ` ${entries.length} entries`, false);
+        } else {
+            showResult("myEntriesResult", ` ${res.status} - No entries`, true);
+        }
+    }
+
+    // ==================== ALL: UPDATE ENTRY ====================
+    function fillUpdateEntry(id, title) {
+        document.getElementById("updateEntryId").value = id;
+        document.getElementById("updateEntryTitle").value = title;
+        document.getElementById("updateEntrySection").scrollIntoView({ behavior: "smooth" });
+    }
+
+    async function updateEntry() {
+        const id = document.getElementById("updateEntryId").value;
+        const title = document.getElementById("updateEntryTitle").value;
+        const description = document.getElementById("updateEntryDesc").value;
+
+        const res = await fetch(`${API}/entry/id/${id}`, {
+            method: "PUT",
+            headers: getHeaders(),
+            body: JSON.stringify({ title, description })
+        });
+
+        if (res.ok) showResult("updateEntryResult", " Entry updated!", false);
+        else showResult("updateEntryResult", ` ${res.status}`, true);
+    }
+
+    // ==================== ALL: DELETE ENTRY ====================
+    function fillDeleteEntry(id) {
+        document.getElementById("deleteEntryId").value = id;
+        document.getElementById("deleteEntrySection").scrollIntoView({ behavior: "smooth" });
+    }
+
+    async function deleteEntry() {
+        const id = document.getElementById("deleteEntryId").value;
+
+        const res = await fetch(`${API}/entry/id/${id}`, {
+            method: "DELETE",
+            headers: getHeaders()
+        });
+
+        if (res.ok) showResult("deleteEntryResult", " Entry deleted!", false);
+        else showResult("deleteEntryResult", ` ${res.status}`, true);
+    }
+</script>
+</body>
+</html>

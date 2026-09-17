@@ -78,8 +78,8 @@
             <select id="adminType">
                 <option value="new-admin">ADMIN</option>
                 <option value="new-manager">MANAGER</option>
-                <option value="new-user/dev">DEVELOPER</option>
-                <option value="new-user/tester">TESTER</option>
+                <option value="new-dev">DEVELOPER</option>
+                <option value="new-tester">TESTER</option>
             </select>
             <button onclick="adminCreateUser()">Create User</button>
             <div id="adminCreateResult"></div>
@@ -313,7 +313,7 @@
     async function adminCreateUser() {
         const name = document.getElementById("adminName").value;
         const password = document.getElementById("adminPassword").value;
-        const type = document.getElementById("adminType").value.toLowerCase();
+        const type = document.getElementById("adminType").value;
 
         const res = await fetch(`${API}/user/${type}`, {
             method: "POST",

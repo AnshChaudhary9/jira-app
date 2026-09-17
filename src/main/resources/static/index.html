@@ -265,6 +265,8 @@
 <!--            document.getElementById("tokenDisplay").textContent = token;-->
             document.getElementById("roleTag").textContent = currentRole;
 
+            document.getElementById("loginCard").classList.add("hidden");
+
             showSectionsByRole(currentRole);
             showResult("loginResult", " Login successful!", false);
         } else {

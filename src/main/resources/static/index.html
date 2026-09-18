@@ -42,6 +42,11 @@
         .entry-item { padding: 10px; border-bottom: 1px solid #eee; font-size: 13px; }
         .entry-item strong { color: #333; }
         .entry-item span { color: #666; }
+        .tab-btn { padding: 10px 20px; background: none; border: none; border-bottom: 3px solid transparent; font-size: 14px; font-weight: 600; color: #666; cursor: pointer; margin-bottom: -2px; }
+        .tab-btn:hover { color: #2563eb; }
+        .tab-btn.active { color: #2563eb; border-bottom-color: #2563eb; }
+        .tab-content { display: block; }
+        .tab-content.hidden { display: none; }
     </style>
 </head>
 <body>
@@ -63,141 +68,152 @@
     <div class="card hidden" id="dashboard">
         <h2>Dashboard <span class="role-tag" id="roleTag"></span></h2>
         <p id="welcomeMsg" style="margin-bottom:10px; font-size:14px;"></p>
-        <div class="token-bar" id="tokenDisplay"></div>
 
-        <!-- ========== ADMIN ONLY ========== -->
+        <!-- TABS -->
+        <div style="display:flex; border-bottom:2px solid #e5e7eb; margin-bottom:20px;">
+            <button class="tab-btn" onclick="showTab('usersTab', this)" id="tabUsersBtn">Users</button>
+            <button class="tab-btn" onclick="showTab('entriesTab', this)" id="tabEntriesBtn">Entries</button>
+            <button class="tab-btn" onclick="showTab('myEntriesTab', this)" id="tabMyEntriesBtn">My Entries</button>
+        </div>
+
+        <!-- TAB: USERS (ADMIN + MANAGER) -->
+        <div id="usersTab" class="tab-content">
+
+            <!-- View All Users -->
+            <div onload="fetchAllUsers()" class="hidden" id="allUsersSection" style="background:#f0fdf4; border-left:4px solid #16a34a; padding:15px; border-radius:6px; margin-bottom:15px;">
+                <h3 style="margin-bottom:10px; color:#166534;">All Users</h3> <button onclick="fetchAllUsers()" style="padding:4px 10px;font-size:12px;">↻ Refresh</button>
+                <div id="usersResult"></div>
+                <table class="table hidden" id="usersTable">
+                    <thead>
+                    <tr><th>Name</th><th>Role</th><th>ID</th><th>Entries</th></tr>
+                    </thead>
+                    <tbody id="usersBody"></tbody>
+                </table>
+            </div>
 
         <!-- Admin: Create Users -->
-        <div class="hidden" id="adminCreateSection">
-            <h2>Create User</h2>
-            <label>Name</label>
-            <input type="text" id="adminName" placeholder="Full name">
-            <label>Password</label>
-            <input type="password" id="adminPassword" placeholder="Password">
-            <label>Type</label>
-            <select id="adminType">
-                <option value="new-admin">ADMIN</option>
-                <option value="new-manager">MANAGER</option>
-                <option value="new-dev">DEVELOPER</option>
-                <option value="new-tester">TESTER</option>
-            </select>
-            <button onclick="adminCreateUser()">Create User</button>
-            <div id="adminCreateResult"></div>
-        </div>
+            <div class="hidden" id="adminCreateSection" style="background:#eff6ff; border-left:4px solid #2563eb; padding:15px; border-radius:6px; margin-bottom:15px;">
+                <h3 style="margin-bottom:10px; color:#1e40af;">Create User</h3>
+                <label>Name</label>
+                <input type="text" id="adminName" placeholder="Full name">
+                <label>Password</label>
+                <input type="password" id="adminPassword" placeholder="Password">
+                <label>Type</label>
+                <select id="adminType">
+                    <option value="new-admin">ADMIN</option>
+                    <option value="new-manager">MANAGER</option>
+                    <option value="new-dev">DEVELOPER</option>
+                    <option value="new-tester">TESTER</option>
+                </select>
+                <button onclick="adminCreateUser()">Create User</button>
+                <div id="adminCreateResult"></div>
+            </div>
 
         <!-- Admin: Update User -->
-        <div class="hidden" id="updateUserSection">
-            <h2>Update User</h2>
-            <label>User ID</label>
-            <input type="text" id="updateUserId" placeholder="ObjectId">
-            <label>New Name</label>
-            <input type="text" id="updateUserName" placeholder="New name">
-            <label>New Password</label>
-            <input type="password" id="updateUserPassword" placeholder="New password">
-            <button onclick="updateUser()">Update</button>
-            <div id="updateUserResult"></div>
-        </div>
+            <div class="hidden" id="updateUserSection" style="background:#fefce8; border-left:4px solid #ca8a04; padding:15px; border-radius:6px; margin-bottom:15px;">
+                <h3 style="margin-bottom:10px; color:#854d0e;">Update User</h3>
+                <label>User ID</label>
+                <input type="text" id="updateUserId" placeholder="ObjectId">
+                <label>New Name</label>
+                <input type="text" id="updateUserName" placeholder="New name">
+                <label>New Password</label>
+                <input type="password" id="updateUserPassword" placeholder="New password">
+                <button onclick="updateUser()">Update</button>
+                <div id="updateUserResult"></div>
+            </div>
 
         <!-- Admin: Delete User -->
-        <div class="hidden" id="deleteUserSection">
-            <h2>Delete User</h2>
-            <label>User ID</label>
-            <input type="text" id="deleteUserId" placeholder="ObjectId">
-            <button class="danger" onclick="deleteUser()">Delete</button>
-            <div id="deleteUserResult"></div>
+            <div class="hidden" id="deleteUserSection" style="background:#fef2f2; border-left:4px solid #dc2626; padding:15px; border-radius:6px; margin-bottom:15px;">
+                <h3 style="margin-bottom:10px; color:#991b1b;">Delete User</h3>
+                <label>User ID</label>
+                <input type="text" id="deleteUserId" placeholder="ObjectId">
+                <button class="danger" onclick="deleteUser()">Delete</button>
+                <div id="deleteUserResult"></div>
+            </div>
         </div>
 
         <!-- ========== ADMIN + MANAGER ========== -->
 
-        <!-- View All Users -->
-        <div class="hidden" id="allUsersSection">
-            <h2>All Users</h2>
-            <button onclick="fetchAllUsers()">Fetch Users</button>
-            <div id="usersResult"></div>
-            <table class="table hidden" id="usersTable">
-                <thead>
-                <tr><th>Name</th><th>Role</th><th>ID</th><th>Entries</th></tr>
-                </thead>
-                <tbody id="usersBody"></tbody>
-            </table>
-        </div>
-
         <!-- View All Entries (MANAGER) -->
-        <div class="hidden" id="allEntriesSection">
-            <h2>All Entries</h2>
-            <button onclick="fetchAllEntries()">All</button>
-            <button class="success" onclick="fetchAllBugs()">Bugs</button>
-            <button class="success" onclick="fetchAllStories()">Stories</button>
-            <div id="allEntriesResult"></div>
-            <div id="allEntriesList"></div>
-        </div>
+
+        <div id="entriesTab" class="tab-content">
+            <div class="hidden" id="allEntriesSection" style="background:#f0fdf4; border-left:4px solid #16a34a; padding:15px; border-radius:6px; margin-bottom:15px;">
+                <h3 style="margin-bottom:10px; color:#166534;">All Entries</h3>
+                <button onclick="fetchAllEntries()">All</button>
+                <button class="success" onclick="fetchAllBugs()">Bugs</button>
+                <button class="success" onclick="fetchAllStories()">Stories</button>
+                <div id="allEntriesResult"></div>
+                <div id="allEntriesList"></div>
+            </div>
 
         <!-- View Entries by User (MANAGER) -->
-        <div class="hidden" id="entriesByUserSection">
-            <h2>Entries by User</h2>
-            <label>User ID</label>
-            <input type="text" id="entriesByUserId" placeholder="ObjectId">
-            <button onclick="fetchEntriesByUser()">Fetch</button>
-            <div id="entriesByUserResult"></div>
-            <div id="entriesByUserList"></div>
-        </div>
+            <div class="hidden" id="entriesByUserSection" style="background:#f0fdf4; border-left:4px solid #16a34a; padding:15px; border-radius:6px; margin-bottom:15px;">
+                <h3 style="margin-bottom:10px; color:#166534;">Entries by User</h3>
+                <label>User ID</label>
+                <input type="text" id="entriesByUserId" placeholder="ObjectId">
+                <button onclick="fetchEntriesByUser()">Fetch</button>
+                <div id="entriesByUserResult"></div>
+                <div id="entriesByUserList"></div>
+            </div>
 
-        <!-- ========== TESTER ONLY ========== -->
-
-        <!-- Create Bug -->
-        <div class="hidden" id="createBugSection">
-            <h2>Report Bug</h2>
-            <label>Title</label>
-            <input type="text" id="bugTitle" placeholder="Bug title">
-            <label>Description</label>
-            <input type="text" id="bugDesc" placeholder="Bug description">
-            <button class="success" onclick="createBug()">Submit Bug</button>
-            <div id="bugResult"></div>
-        </div>
-
-        <!-- ========== DEVELOPER ONLY ========== -->
-
-        <!-- Create Story -->
-        <div class="hidden" id="createStorySection">
-            <h2>Create Story</h2>
-            <label>Title</label>
-            <input type="text" id="storyTitle" placeholder="Story title">
-            <label>Description</label>
-            <input type="text" id="storyDesc" placeholder="Story description">
-            <button class="success" onclick="createStory()">Submit Story</button>
-            <div id="storyResult"></div>
-        </div>
+            </div>
 
         <!-- ========== ALL AUTHENTICATED USERS ========== -->
 
         <!-- My Entries -->
-        <div class="hidden" id="myEntriesSection">
-            <h2>My Entries</h2>
-            <button onclick="fetchMyEntries()">Fetch My Entries</button>
-            <div id="myEntriesResult"></div>
-            <div id="myEntriesList"></div>
-        </div>
 
-        <!-- Update My Entry -->
-        <div id="updateEntrySection">
-            <h2>Update Entry</h2>
-            <label>Entry ID</label>
-            <input type="text" id="updateEntryId" placeholder="Entry ObjectId">
-            <label>New Title</label>
-            <input type="text" id="updateEntryTitle" placeholder="New title">
-            <label>New Description</label>
-            <input type="text" id="updateEntryDesc" placeholder="New description">
-            <button onclick="updateEntry()">Update</button>
-            <div id="updateEntryResult"></div>
-        </div>
+        <div id="myEntriesTab" class="tab-content">
+            <div class="hidden" id="myEntriesSection" style="background:#f0fdf4; border-left:4px solid #16a34a; padding:15px; border-radius:6px; margin-bottom:15px;">
+                <h3 style="margin-bottom:10px; color:#166534;">My Entries</h3>
+                <button onclick="fetchMyEntries()" style="padding:4px 10px;font-size:12px;">↻ Refresh</button>
+                <div id="myEntriesResult"></div>
+                <div id="myEntriesList"></div>
+            </div>
 
-        <!-- Delete My Entry -->
-        <div id="deleteEntrySection">
-            <h2>Delete Entry</h2>
-            <label>Entry ID</label>
-            <input type="text" id="deleteEntryId" placeholder="Entry ObjectId">
-            <button class="danger" onclick="deleteEntry()">Delete</button>
-            <div id="deleteEntryResult"></div>
+            <!--  Create Bug -->
+            <div class="hidden" id="createBugSection" style="background:#fef2f2; border-left:4px solid #dc2626; padding:15px; border-radius:6px; margin-bottom:15px;">
+                <h3 style="margin-bottom:10px; color:#991b1b;">Create Bug</h3>
+                <h2>Report Bug</h2>
+                <label>Title</label>
+                <input type="text" id="bugTitle" placeholder="Bug title">
+                <label>Description</label>
+                <input type="text" id="bugDesc" placeholder="Bug description">
+                <button class="success" onclick="createBug()">Submit Bug</button>
+                <div id="bugResult"></div>
+            </div>
+
+            <!--  Create Story -->
+            <div class="hidden" id="createStorySection" style="background:#eff6ff; border-left:4px solid #2563eb; padding:15px; border-radius:6px; margin-bottom:15px;">
+                <h3 style="margin-bottom:10px; color:#1e40af;">Create Story</h3>
+                <label>Title</label>
+                <input type="text" id="storyTitle" placeholder="Story title">
+                <label>Description</label>
+                <input type="text" id="storyDesc" placeholder="Story description">
+                <button class="success" onclick="createStory()">Submit Story</button>
+                <div id="storyResult"></div>
+            </div>
+
+            <!-- Update My Entry -->
+            <div class="hidden" id="updateEntrySection" style="background:#fefce8; border-left:4px solid #ca8a04; padding:15px; border-radius:6px; margin-bottom:15px;">
+                <h3 style="margin-bottom:10px; color:#854d0e;">Update My Entry</h3>
+                <label>Entry ID</label>
+                <input type="text" id="updateEntryId" placeholder="Entry ObjectId">
+                <label>New Title</label>
+                <input type="text" id="updateEntryTitle" placeholder="New title">
+                <label>New Description</label>
+                <input type="text" id="updateEntryDesc" placeholder="New description">
+                <button onclick="updateEntry()">Update</button>
+                <div id="updateEntryResult"></div>
+            </div>
+
+            <!-- Delete My Entry -->
+            <div class="hidden" id="deleteEntrySection" style="background:#fef2f2; border-left:4px solid #dc2626; padding:15px; border-radius:6px; margin-bottom:15px;">
+                <h3 style="margin-bottom:10px; color:#991b1b;">Delete My Entry</h3>
+                <label>Entry ID</label>
+                <input type="text" id="deleteEntryId" placeholder="Entry ObjectId">
+                <button class="danger" onclick="deleteEntry()">Delete</button>
+                <div id="deleteEntryResult"></div>
+            </div>
         </div>
     </div>
 </div>
@@ -244,6 +260,18 @@
         });
     }
 
+    function showTab(tabId, btnElement) {
+    document.querySelectorAll(".tab-content").forEach(el => el.classList.add("hidden"));
+    document.getElementById(tabId).classList.remove("hidden");
+
+    document.querySelectorAll(".tab-btn").forEach(el => el.classList.remove("active"));
+    if (btnElement) btnElement.classList.add("active");
+
+    if (tabId === "usersTab") fetchAllUsers();
+    else if (tabId === "entriesTab") fetchAllEntries();
+    else if (tabId === "myEntriesTab") fetchMyEntries();
+}
+
     // ==================== LOGIN ====================
     async function login() {
         const name = document.getElementById("loginName").value;
@@ -276,14 +304,24 @@
 
     // ==================== ROLE-BASED VISIBILITY ====================
     function showSectionsByRole(role) {
-        // Hide all
-        ["adminCreateSection","updateUserSection","deleteUserSection",
-         "allUsersSection","allEntriesSection","entriesByUserSection",
-         "createBugSection","createStorySection"].forEach(id =>
-            document.getElementById(id).classList.add("hidden")
-        );
+
+        const tabUsersBtn = document.getElementById("tabUsersBtn");
+        const tabEntriesBtn = document.getElementById("tabEntriesBtn");
+        const tabMyEntriesBtn = document.getElementById("tabMyEntriesBtn");
+
+        tabUsersBtn.style.display = "none";
+        tabEntriesBtn.style.display = "none";
+        tabMyEntriesBtn.style.display = "none";
+
+        document.querySelectorAll(".tab-content").forEach(el => el.classList.add("hidden"));
+        // Hide all sub-sections
+            ["adminCreateSection","updateUserSection","deleteUserSection","createBugSection","createStorySection"].forEach(id =>
+        document.getElementById(id).classList.add("hidden")
+    );
 
         if (role === "ADMIN") {
+            tabUsersBtn.style.display = "inline-block";
+            tabEntriesBtn.style.display = "inline-block";
             document.getElementById("adminCreateSection").classList.remove("hidden");
             document.getElementById("updateUserSection").classList.remove("hidden");
             document.getElementById("deleteUserSection").classList.remove("hidden");
@@ -291,22 +329,31 @@
             document.getElementById("allEntriesSection").classList.remove("hidden");
             document.getElementById("entriesByUserSection").classList.remove("hidden");
         } else if (role === "MANAGER") {
+            tabUsersBtn.style.display = "inline-block";
+            tabEntriesBtn.style.display = "inline-block";
+            tabMyEntriesBtn.style.display = "inline-block";
             document.getElementById("allUsersSection").classList.remove("hidden");
             document.getElementById("allEntriesSection").classList.remove("hidden");
             document.getElementById("entriesByUserSection").classList.remove("hidden");
+             document.getElementById("myEntriesSection").classList.remove("hidden");
             document.getElementById("createBugSection").classList.remove("hidden");
             document.getElementById("createStorySection").classList.remove("hidden");
-
+            document.getElementById("deleteEntrySection").classList.remove("hidden");
+            document.getElementById("updateEntrySection").classList.remove("hidden");
         } else if (role === "TESTER") {
+            tabMyEntriesBtn.style.display = "inline-block";
             document.getElementById("createBugSection").classList.remove("hidden");
             document.getElementById("entriesByUserSection").classList.remove("hidden");
             document.getElementById("myEntriesSection").classList.remove("hidden");
-
+            document.getElementById("deleteEntrySection").classList.remove("hidden");
+            document.getElementById("updateEntrySection").classList.remove("hidden");
         } else if (role === "DEVELOPER") {
+            tabMyEntriesBtn.style.display = "inline-block";
             document.getElementById("createStorySection").classList.remove("hidden");
             document.getElementById("entriesByUserSection").classList.remove("hidden");
             document.getElementById("myEntriesSection").classList.remove("hidden");
-
+            document.getElementById("deleteEntrySection").classList.remove("hidden");
+            document.getElementById("updateEntrySection").classList.remove("hidden");
         }
         // USER → only "My Entries" section (always visible)
     }
@@ -438,35 +485,35 @@
         }
     }
 
-    // ==================== TESTER: CREATE BUG ====================
-    async function createBug() {
-        const title = document.getElementById("bugTitle").value;
-        const description = document.getElementById("bugDesc").value;
+    //Create Bug (from My Entries tab)
+async function createBug() {
+    const title = document.getElementById("bugTitle").value;
+    const description = document.getElementById("bugDesc").value;
 
-        const res = await fetch(`${API}/entry/bug`, {
-            method: "POST",
-            headers: getHeaders(),
-            body: JSON.stringify({ title, description })
-        });
+    const res = await fetch(`${API}/entry/bug`, {
+        method: "POST",
+        headers: getHeaders(),
+        body: JSON.stringify({ title, description })
+    });
 
-        if (res.ok) showResult("bugResult", " Bug reported!", false);
-        else showResult("bugResult", ` ${res.status}`, true);
-    }
+    if (res.ok) showResult("bugResult", "Bug reported!", false);
+    else showResult("bugResult", `${res.status}`, true);
+}
 
-    // ==================== DEVELOPER: CREATE STORY ====================
-    async function createStory() {
-        const title = document.getElementById("storyTitle").value;
-        const description = document.getElementById("storyDesc").value;
+// Create Story (from My Entries tab)
+async function createStory() {
+    const title = document.getElementById("storyTitle").value;
+    const description = document.getElementById("storyDesc").value;
 
-        const res = await fetch(`${API}/entry/story`, {
-            method: "POST",
-            headers: getHeaders(),
-            body: JSON.stringify({ title, description })
-        });
+    const res = await fetch(`${API}/entry/story`, {
+        method: "POST",
+        headers: getHeaders(),
+        body: JSON.stringify({ title, description })
+    });
 
-        if (res.ok) showResult("storyResult", "Story created!", false);
-        else showResult("storyResult", ` ${res.status}`, true);
-    }
+    if (res.ok) showResult("storyResult", "Story created!", false);
+    else showResult("storyResult", `${res.status}`, true);
+}
 
     // ==================== ALL: MY ENTRIES ====================
     async function fetchMyEntries() {

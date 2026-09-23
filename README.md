@@ -237,11 +237,11 @@ This means a higher-level role inherits permissions from the role below it.
 | View All Issues | ✅* | ✅ | ❌ | ❌ |
 | View Bugs | ✅* | ✅ | ❌ | ❌ |
 | View Stories | ✅* | ✅ | ❌ | ❌ |
-| Create Story | ❌ | ❌ | ✅ | ❌ |
-| Create Bug | ❌ | ❌ | ❌ | ✅ |
-| View Own Issues | ✅ | ✅ | ✅ | ✅ |
-| Update Own Issue | ✅ | ✅ | ✅ | ✅ |
-| Delete Own Issue | ✅ | ✅ | ✅ | ✅ |
+| Create Story | ❌ | ✅ | ✅ | ❌ |
+| Create Bug | ❌ | ✅ | ❌ | ✅ |
+| View Own Issues | ❌ | ✅ | ✅ | ✅ |
+| Update Own Issue | ❌ | ✅ | ✅ | ✅ |
+| Delete Own Issue | ❌ | ✅ | ✅ | ✅ |
 
 `*` Admin inherits manager-level permissions through the configured role hierarchy.
 
